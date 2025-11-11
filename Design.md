@@ -144,7 +144,7 @@ Auth and membership number
   - Horizontal scaling for read path (caches, read replicas), vertical scale for write DB or use partitioning/sharding if needed.
 
 ## Sequence diagrams (critical flows)
-- Checkout flow (with JWT validation and idempotency)
+- [Checkout flow (with JWT validation and idempotency)](https://github.com/Priyal1995/blueBeam_SYS_DSN/blob/main/checkout_flow.png)
 - Return flow
 
 ## Key trade-offs
