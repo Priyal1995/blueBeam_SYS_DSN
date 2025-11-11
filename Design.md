@@ -36,9 +36,6 @@ Non-functional
 
 ---
 
-## Summary (one‑line)
-- Use small set of focused microservices (Auth, Catalog, Inventory, Circulation, Search, Admin) backed by an ACID datastore for authoritative state (Postgres/Aurora), with search index (OpenSearch), cache (Redis), and eventing for decoupling.
-
 ## Microservices (functional responsibilities)
 - API Gateway / Edge
   - Front door, TLS termination, rate limiting, and JWT validation (optional).
