@@ -21,7 +21,6 @@ Non-functional
 - High availability (99.95%+ for mission-critical).
 - Low latency for reads (<200ms typical).
 - Correctness: no double-loaning of the same physical copy.
-- Auditability and observability.
 
 ---
 
@@ -41,7 +40,7 @@ Non-functional
   - Front door, TLS termination, rate limiting, and JWT validation (optional).
 - Auth Service (Identity)
   - Responsible for membership authentication and issuing short-lived tokens.
-  - Stores (or relies on managed provider for) membership number -> user id mapping and credentials.
+  - Relies on managed provider for membership number -> user id mapping and credentials.
 - User Service
   - Application profile for members: name, membership number (unique), contact info, account status, loan limits.
 - Inventory & Catalog Service
@@ -57,7 +56,7 @@ Non-functional
   - Indexes catalog + availability + copy location for low-latency search (OpenSearch).
 
 Cross-cutting components
-- Idempotency Store (can be a small DB table or Redis) for safe retries.
+- Idempotency Store Redis for safe retries.
 - Observability (Logging, Tracing, Metrics) across all services.
 
 ## Physical & Logical Design
@@ -65,7 +64,7 @@ Cross-cutting components
 Logical architecture (data model highlights)
 - User { user_id (PK), membership_number (unique), name, email, status, loan_limit }
 - Book { book_id (PK), isbn, title, authors, subjects, metadata }
-- Copy { copy_id (PK), book_id (FK), barcode, location_id, status, tenant_id? }
+- Copy { copy_id (PK), book_id (FK), barcode, location_id , status, tenant_id }
 - Loan { loan_id (PK), copy_id (FK), user_id (FK), checkout_at, due_at, returned_at, status }
 
 Principles:
@@ -100,12 +99,17 @@ Physical architecture
 - POST /auth/login  (returns JWT) — uses membership_number + password
 - GET  /books?query=...
 - POST /books  (ADMIN) — create bibliographic record
+    - Body: { isbn, title, authors, subjects, metadata }
+    - Headers: Authorization: Bearer <JWT>
 - POST /copies  (ADMIN) — add physical copy
+    - Body: { book_id (FK), barcode, location_id , no_of_copies}
+    - Headers: Authorization: Bearer <JWT>
 - POST /loans/checkout  (Auth required)
-  - Body: { copy_id } or { book_id, prefer_copy_id }
+  - Body: { book_id, prefer_copy_id }
   - Headers: Authorization: Bearer <JWT>, Idempotency-Key
 - POST /loans/return  (Auth required)
   - Body: { copy_id }
+  - Headers: Authorization: Bearer <JWT>, Idempotency-Key
 - GET  /users/{user_id}/loans  (Auth required; only own or admin)
 
 Auth and membership number
@@ -117,11 +121,6 @@ Auth and membership number
 - Accept Idempotency-Key header for checkout/return.
 - Persist idempotency entries in Redis with durability TTL policy.
 - For reliability, mark idempotency after commit.
-
-## Auditability & Observability
-- Write every domain-changing operation into AuditEvent table (or produce events + store immutable log).
-- Log structured traces (OpenTelemetry) and send to CloudWatch.
-- Capture request id, user_id, membership_number, service, timestamp.
 
 ## Non-functional & mission-critical architectural principles
 - High availability
