@@ -145,7 +145,7 @@ Auth and membership number
 
 ## Sequence diagrams (critical flows)
 - [Checkout flow (with JWT validation and idempotency)](https://github.com/Priyal1995/blueBeam_SYS_DSN/blob/main/checkout_flow.png)
-- Return flow
+- [Return flow](https://github.com/Priyal1995/blueBeam_SYS_DSN/blob/main/returnFlow.png)
 
 ## Key trade-offs
 - Strong DB transactions (Postgres) vs serverless scale (DynamoDB): choose Postgres for correctness and simpler modeling.
