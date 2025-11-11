@@ -49,7 +49,7 @@ Non-functional
   - Physical copies: copy_id, book_id, barcode, location (shelf), status (AVAILABLE, LOANED, LOST).
   - Add/remove copies, update physical location.
 - Circulation Service
-  - Core loan logic: checkout, return, renew, hold logic.
+  - Core loan logic: checkout, return.
   - Enforces correctness (no double-loan) and loan business rules.
   - Uses transactions and locking with the authoritative DB.
 - Search Service
@@ -68,7 +68,7 @@ Logical architecture (data model highlights)
 - Loan { loan_id (PK), copy_id (FK), user_id (FK), checkout_at, due_at, returned_at, status }
 
 Principles:
-- Authoritative state in RDBMS (Postgres): Users, Books, Copies, Loans, Audit.
+- Authoritative state in RDBMS (Postgres): Users, Books, Copies, Loans.
 - Denormalized search index (OpenSearch) for listing/searching availability and fast queries.
 - Short-lived caches (Redis) for hot reads and idempotency keys.
 
@@ -85,7 +85,7 @@ Physical architecture
 
 ## Concurrency & Correctness (prevent double-loan)
 - Circulation Service uses DB transactions with SELECT ... FOR UPDATE on the Copy row:
-  - Begin TX
+  - Begin Transaction
   - SELECT * FROM copies WHERE copy_id = ? FOR UPDATE
   - Validate status == AVAILABLE
   - INSERT INTO loans(...)
@@ -93,7 +93,7 @@ Physical architecture
   - COMMIT
 - Add a partial unique index to ensure at most one active loan per copy:
   - CREATE UNIQUE INDEX ux_loans_copy_active ON loans(copy_id) WHERE status = 'ACTIVE';
-- Use idempotency keys for write APIs.
+- Using idempotency keys for write APIs.
 
 ## API surface (concise)
 - POST /auth/login  (returns JWT) — uses membership_number + password
